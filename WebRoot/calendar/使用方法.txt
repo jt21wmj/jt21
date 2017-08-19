@@ -1,0 +1,4 @@
+第一步：导入WdatePicker.js到使用页面
+第二步：在使用的控件触发事件时调用WdatePicker()函数
+
+注意：如果frame框架日历控件位置显示异常，把$crossFrame设置成false

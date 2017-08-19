@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:aop="http://www.springframework.org/schema/aop"
+    xmlns:mvc="http://www.springframework.org/schema/mvc"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd">
+     <!-- 引入外部文件properties文件 -->
+	<context:property-placeholder location="classpath:db.properties"/>
+	<!-- 配置数据源 -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
+		<property name="driverClassName" value="${driverClass}"/>
+		<property name="url" value="${url}"/>
+		<property name="username" value="${user}"/>
+		<property name="password" value="${password}"/>
+		<!-- 初始化连接数 -->
+		<property name="initialSize" value="30"/>
+		<!-- 最大连接数 -->
+		<property name="maxActive" value="150"/>
+		<!-- 最小空闲连接 -->
+		<property name="minIdle" value="10"/>
+		<!-- 最大空闲连接 -->
+		<property name="maxIdle" value="30"/>
+		<!-- 等待超时时间单位毫秒 -->
+		<property name="maxWait" value="5000"/>
+	</bean>
+	<!-- 创建sessionFactory并指定数据源 -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<!--指定数据源-->
+		<property name="dataSource" ref="dataSource"></property>
+		<!--mybatis-config.xml文件的位置-->
+		<property name="configLocation" value="classpath:mybatis-config.xml"></property>
+		<!--sql映射文件地址（和configLocation配制二选一,这种不需要mybatis－config.xml配制文件）-->
+		<!--<property name="mapperLocations" value="classpath:dao/*.xml"></property>-->
+	</bean>
+	<!--  配制能自动创建数据映射器接口的MapperScannerConfigurer类-->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<!-- 注入会话工厂(如果会话工厂ID名叫sqlSessionFactory，此项可不配) -->	
+		<!-- <property name="sqlSessionFactory" ref="sqlSessionFactory"/> -->
+		<!-- <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/> -->
+		<!-- 为映射器接口文件设置基本的包路径。 你可以使用分号或逗号 作为分隔符设置多于一个的包路径。 -->
+		<property name="basePackage" value="dao"/>
+	</bean>
+	<!--配置事务管理器 -->
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"/>
+	</bean>
+	<!-- 声明使用注解式事务 -->
+	<tx:annotation-driven transaction-manager="transactionManager"/>
+	
+	<!-- AOP 利用组件扫描，将切面组件纳入Spring容器。虽然可以通过编程的方式织入切面，
+	但是一般情况下，我们还是使用spring的配置自动完成创建代理织入切面的工作-->
+	<aop:aspectj-autoproxy/>
+	<!-- 开启组件扫描 -->
+	<context:component-scan base-package="dao,service,controller"/>
+	
+	<!-- 静态资源处理 -->
+	<mvc:default-servlet-handler/>
+	
+	<mvc:annotation-driven>
+		<!-- 把消息转换器的默认字符编码改成utf-8-->
+		<mvc:message-converters>
+			<bean class="org.springframework.http.converter.StringHttpMessageConverter">
+				<property name="defaultCharset" value="utf-8"></property>
+			</bean>
+		</mvc:message-converters>
+	</mvc:annotation-driven>
+	
+	<!-- 配置视图解析器：如何把handler方法返回值解析为实际的物理视图 -->
+	<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/jsp/"></property>
+		<property name="suffix" value=".jsp"></property>
+	</bean>
+</beans>
